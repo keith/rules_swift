@@ -379,13 +379,15 @@ def new_objc_provider(
         if apple_common.Objc in dep
     ]
     objc_provider_args = {
-        "header": depset(direct = [objc_header]),
         "include": depset(direct = [include_path]),
         "library": depset(direct = [static_archive]),
         "link_inputs": depset(direct = [swiftmodule] + link_inputs),
         "providers": objc_providers,
         "uses_swift": True,
     }
+
+    if objc_header:
+        objc_provider_args["header"] = depset(direct = [objc_header])
 
     if linkopts:
         objc_provider_args["linkopt"] = depset(direct = linkopts)
