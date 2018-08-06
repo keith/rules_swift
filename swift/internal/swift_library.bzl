@@ -19,6 +19,47 @@ load(":compiling.bzl", "swift_library_output_map")
 load(":providers.bzl", "SwiftToolchainInfo")
 load(":utils.bzl", "expand_locations")
 load("@bazel_skylib//:lib.bzl", "dicts")
+load(
+    "@build_bazel_rules_apple//apple:providers.bzl",
+    "AppleResourceInfo",
+    "AppleResourceSet",
+)
+
+def _collect_resource_sets(resources, structured_resources, deps, module_name):
+  """Collects resource sets from the target and its dependencies.
+
+  Args:
+    resources: The resources associated with the target being built.
+    structured_resources: The structured resources associated with the target
+        being built.
+    deps: The dependencies of the target being built.
+    module_name: The name of the Swift module associated with the resources
+        (either the user-provided name, or the auto-generated one).
+  Returns:
+    A list of structs representing the transitive resources to propagate to the
+    bundling rules.
+  """
+  resource_sets = []
+
+  print("here to create")
+
+  # Create a resource set from the resources attached directly to this target.
+  if resources or structured_resources:
+    print("creating this shit", resources, structured_resources)
+    resource_sets.append(AppleResourceSet(
+        resources=depset(resources),
+        structured_resources=depset(structured_resources),
+        swift_module=module_name,
+    ))
+
+  # Collect transitive resource sets from dependencies.
+  for dep in deps:
+    print("has a dep", dep)
+    if AppleResourceInfo in dep:
+      print("has resource info", dep[AppleResourceInfo].resource_sets)
+      resource_sets.extend(dep[AppleResourceInfo].resource_sets)
+
+  return resource_sets
 
 def _swift_library_impl(ctx):
     copts = expand_locations(ctx, ctx.attr.copts, ctx.attr.swiftc_inputs)
@@ -60,7 +101,12 @@ def _swift_library_impl(ctx):
         objc_fragment = objc_fragment,
     )
 
-    return compile_results.providers + [
+    resource_sets = _collect_resource_sets(
+        ctx.files.resources, ctx.files.structured_resources, ctx.attr.deps,
+        module_name)
+    resource_providers = [AppleResourceInfo(resource_sets=resource_sets)]
+
+    return compile_results.providers + resource_providers + [
         DefaultInfo(
             files = depset(direct = [
                 compile_results.output_archive,

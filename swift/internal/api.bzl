@@ -53,6 +53,10 @@ load(
 load(":swift_cc_libs_aspect.bzl", "swift_cc_libs_excluding_directs_aspect")
 load(":utils.bzl", "get_optionally")
 load("@bazel_skylib//:lib.bzl", "dicts", "partial")
+load(
+    "@build_bazel_rules_apple//apple/bundling:apple_bundling_aspect.bzl",
+    "apple_bundling_aspect",
+)
 
 # The compilation modes supported by Bazel.
 _VALID_COMPILATION_MODES = ["dbg", "fastbuild", "opt"]
@@ -528,6 +532,8 @@ def _compile_as_library(
         if src.basename == "main.swift":
             use_parse_as_library = False
             break
+
+    print("as lib? ", use_parse_as_library)
     if use_parse_as_library:
         library_copts.add("-parse-as-library")
 
@@ -789,6 +795,7 @@ library. Supports auto-linking.
             # TODO(b/77853138): Remove once the Apple rules support bundling from
             # `data`.
             "resources": attr.label_list(
+                aspects = [apple_bundling_aspect],
                 allow_empty = True,
                 allow_files = True,
                 doc = """

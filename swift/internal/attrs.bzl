@@ -16,6 +16,10 @@
 
 load(":providers.bzl", "SwiftClangModuleInfo", "SwiftInfo")
 load(":swift_cc_libs_aspect.bzl", "swift_cc_libs_aspect")
+load(
+    "@build_bazel_rules_apple//apple/bundling:apple_bundling_aspect.bzl",
+    "apple_bundling_aspect",
+)
 
 SWIFT_COMMON_RULE_ATTRS = {
     "data": attr.label_list(
@@ -30,7 +34,7 @@ binary or library, or other programs needed by it.
 """,
     ),
     "deps": attr.label_list(
-        aspects = [swift_cc_libs_aspect],
+        aspects = [swift_cc_libs_aspect, apple_bundling_aspect],
         doc = """
 A list of targets that are dependencies of the target being built, which will be
 linked into that target. Allowed kinds of dependencies are:

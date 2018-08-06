@@ -379,12 +379,25 @@ def new_objc_provider(
         if apple_common.Objc in dep
     ]
     objc_provider_args = {
-        "include": depset(direct = [include_path]),
-        "library": depset(direct = [static_archive]),
-        "link_inputs": depset(direct = [swiftmodule] + link_inputs),
         "providers": objc_providers,
         "uses_swift": True,
     }
+
+    if include_path:
+        objc_provider_args["include"] = depset(direct = [include_path])
+
+
+    if swiftmodule:
+      objc_provider_args["link_inputs"] = depset(direct = [swiftmodule] + link_inputs)
+    # else:
+    #   objc_provider_args["link_inputs"] = depset(direct = link_inputs)
+    # inputs = link_inputs
+    # if swiftmodule:
+    #   inputs += [swiftmodule]
+    #   objc_provider_args["link_inputs"] = depset(direct = inputs)
+
+    if static_archive:
+        objc_provider_args["library"] = depset(direct = [static_archive])
 
     if objc_header:
         objc_provider_args["header"] = depset(direct = [objc_header])

@@ -16,6 +16,7 @@
 
 load(":api.bzl", "swift_common")
 load(":derived_files.bzl", "derived_files")
+load(":compiling.bzl", "build_swift_info_provider", "new_objc_provider")
 load(":linking.bzl", "register_link_action")
 load(":providers.bzl", "SwiftBinaryInfo", "SwiftToolchainInfo")
 load(":utils.bzl", "expand_locations", "get_optionally")
@@ -125,7 +126,7 @@ def _swift_linking_rule_impl(ctx, is_test):
         action_environment = toolchain.action_environment,
         clang_executable = toolchain.clang_executable,
         deps = ctx.attr.deps + toolchain.implicit_deps,
-        expanded_linkopts = linkopts,
+        expanded_linkopts = linkopts + swift_common.swift_runtime_linkopts(False, toolchain),
         features = ctx.features,
         inputs = additional_inputs_to_linker,
         mnemonic = "SwiftLinkExecutable",
@@ -133,6 +134,17 @@ def _swift_linking_rule_impl(ctx, is_test):
         outputs = [out_bin],
         rule_specific_args = link_args,
         toolchain = toolchain,
+    )
+
+    a = new_objc_provider(
+        deps = ctx.attr.deps + toolchain.implicit_deps,
+        include_path = None,
+        link_inputs = [],
+        linkopts = linkopts + swift_common.swift_runtime_linkopts(False, toolchain),
+        module_map = None,
+        objc_header = None,
+        static_archive = None,
+        swiftmodule = None,
     )
 
     return [
@@ -145,7 +157,7 @@ def _swift_linking_rule_impl(ctx, is_test):
             ),
         ),
         OutputGroupInfo(**additional_output_groups),
-    ] + compilation_providers
+    ] + compilation_providers + [a]
 
 def _swift_binary_impl(ctx):
     return _swift_linking_rule_impl(ctx, is_test = False)
