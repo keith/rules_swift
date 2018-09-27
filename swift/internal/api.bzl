@@ -471,7 +471,7 @@ def _compile_as_objects(
     compile_args = actions.args()
     if is_feature_enabled(SWIFT_FEATURE_USE_RESPONSE_FILES, feature_configuration):
         compile_args.use_param_file("@%s", use_always = True)
-        compile_args.set_param_file_format("shell")
+        compile_args.set_param_file_format("multiline")
 
     compile_args.add("-emit-object")
     compile_args.add_all(compile_reqs.args)
@@ -502,10 +502,12 @@ def _compile_as_objects(
     compile_outputs = ([out_module, out_doc] + output_objects +
                        compile_reqs.other_outputs) + additional_outputs
 
+    compile_args.add_all(arguments)
     _run_toolchain_action(
         actions = actions,
-        arguments = [compile_args] + arguments,
-        executable = "swiftc",
+        arguments = [compile_args],
+        execution_requirements = {"supports-workers": "1"},
+        executable = "./swiftc_worker.py",
         inputs = all_inputs,
         mnemonic = "SwiftCompile",
         outputs = compile_outputs,
@@ -545,7 +547,7 @@ def _compile_as_objects(
 
     return struct(
         compile_inputs = all_inputs,
-        compile_options = ([compile_args] + arguments),
+        compile_options = [compile_args],
         linker_flags = linker_flags,
         linker_inputs = linker_inputs,
         output_doc = out_doc,
@@ -677,7 +679,7 @@ def _compile_as_library(
 
     # Register the compilation actions to get an object file (.o) for the Swift
     # code, along with its swiftmodule and swiftdoc.
-    library_copts = actions.args()
+    library_copts = []
 
     # Builds on Apple platforms typically don't use `swift_binary`; they have
     # different linking logic to produce fat binaries. This means that all such
@@ -691,7 +693,7 @@ def _compile_as_library(
             use_parse_as_library = False
             break
     if use_parse_as_library:
-        library_copts.add("-parse-as-library")
+        library_copts.append("-parse-as-library")
 
     objc_header = None
     output_module_map = None
@@ -702,12 +704,12 @@ def _compile_as_library(
         SWIFT_FEATURE_NO_GENERATED_HEADER,
         feature_configuration,
     )
-    if generates_header and toolchain.supports_objc_interop and objc_fragment:
+    if False and generates_header and toolchain.supports_objc_interop and objc_fragment:
         # Generate a Swift bridging header for this library so that it can be
         # included by Objective-C code that may depend on it.
         objc_header = derived_files.objc_header(actions, target_name = label.name)
-        library_copts.add("-emit-objc-header-path")
-        library_copts.add(objc_header)
+        library_copts.append("-emit-objc-header-path")
+        library_copts.append(objc_header)
         additional_outputs.append(objc_header)
 
         # Create a module map for the generated header file. This ensures that
@@ -732,7 +734,7 @@ def _compile_as_library(
 
     compile_results = _compile_as_objects(
         actions = actions,
-        arguments = [library_copts],
+        arguments = library_copts,
         compilation_mode = compilation_mode,
         copts = copts,
         defines = defines,

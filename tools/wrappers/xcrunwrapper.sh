@@ -26,6 +26,11 @@
 
 set -eu
 
+# env >&2
+
+SDKROOT=/Applications/Xcode-10.0.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator12.0.sdk
+
+
 # SYNOPSIS
 #   Rewrites any Bazel placeholder strings in the given argument string,
 #   echoing the result.
@@ -97,4 +102,8 @@ done
 
 # We can't use `exec` here because we need to make sure the `trap` runs
 # afterward.
-/usr/bin/xcrun "$TOOLNAME" "${ARGS[@]}"
+if [ "$TOOLNAME" = "./swiftc_worker.py" ]; then
+  DEVELOPER_DIR="$WRAPPER_DEVDIR" SDKROOT="$SDKROOT" PYTHONPATH=/Users/ksmiley/.pyenv/versions/2.7.15/lib/python2.7/site-packages /Users/ksmiley/dev/lyft/lyft-bazel-5/swiftc_worker.py "${ARGS[@]}"
+else
+  /usr/bin/xcrun "$TOOLNAME" "${ARGS[@]}"
+fi
