@@ -77,6 +77,7 @@ def _create_swift_info(
         module_name = None,
         swiftdocs = [],
         swiftmodules = [],
+        swiftinterfaces = [],
         swift_infos = [],
         swift_version = None):
     """Creates a new `SwiftInfo` provider with the given values.
@@ -114,22 +115,26 @@ def _create_swift_info(
     transitive_modulemaps = []
     transitive_swiftdocs = []
     transitive_swiftmodules = []
+    transitive_swiftinterfaces = []
     for swift_info in swift_infos:
         transitive_defines.append(swift_info.transitive_defines)
         transitive_modulemaps.append(swift_info.transitive_modulemaps)
         transitive_swiftdocs.append(swift_info.transitive_swiftdocs)
         transitive_swiftmodules.append(swift_info.transitive_swiftmodules)
+        transitive_swiftinterfaces.append(swift_info.transitive_swiftinterfaces)
 
     return SwiftInfo(
         direct_defines = defines,
         direct_swiftdocs = swiftdocs,
         direct_swiftmodules = swiftmodules,
+        direct_swiftinterfaces = swiftinterfaces,
         module_name = module_name,
         swift_version = swift_version,
         transitive_defines = depset(defines, transitive = transitive_defines),
         transitive_modulemaps = depset(modulemaps, transitive = transitive_modulemaps),
         transitive_swiftdocs = depset(swiftdocs, transitive = transitive_swiftdocs),
         transitive_swiftmodules = depset(swiftmodules, transitive = transitive_swiftmodules),
+        transitive_swiftinterfaces = depset(swiftinterfaces, transitive = transitive_swiftinterfaces),
     )
 
 def _compilation_attrs(additional_deps_aspects = []):
@@ -513,6 +518,7 @@ def _compile(
     )
     output_objects = compile_reqs.output_objects
 
+    swiftinterface = derived_files.swiftinterface(actions, module_name = module_name)
     swiftmodule = derived_files.swiftmodule(actions, module_name = module_name)
     swiftdoc = derived_files.swiftdoc(actions, module_name = module_name)
     additional_outputs = []
@@ -569,6 +575,9 @@ def _compile(
     args.add_all(compile_reqs.args)
     args.add("-emit-module-path")
     args.add(swiftmodule)
+    args.add("-enable-library-evolution")
+    args.add("-emit-module-interface-path")
+    args.add(swiftinterface)
 
     # Add any command line arguments that do *not* have to do with emitting outputs.
     basic_inputs = _swiftc_command_line_and_inputs(
@@ -632,7 +641,7 @@ def _compile(
             depset(compile_reqs.compile_inputs),
         ],
     )
-    compile_outputs = ([swiftmodule, swiftdoc] + output_objects +
+    compile_outputs = ([swiftinterface, swiftmodule, swiftdoc] + output_objects +
                        compile_reqs.other_outputs) + additional_outputs
 
     run_swift_action(
@@ -691,6 +700,7 @@ def _compile(
         stats_directory = stats_directory,
         swiftdoc = swiftdoc,
         swiftmodule = swiftmodule,
+        swiftinterface = swiftinterface,
     )
 
 def _configure_features(ctx, swift_toolchain, requested_features = [], unsupported_features = []):

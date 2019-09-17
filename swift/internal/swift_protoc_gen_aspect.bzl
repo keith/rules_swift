@@ -435,6 +435,7 @@ def _swift_protoc_gen_aspect_impl(target, aspect_ctx):
                 module_name = module_name,
                 swiftdocs = [compilation_outputs.swiftdoc],
                 swiftmodules = [compilation_outputs.swiftmodule],
+                swiftinterfaces = [compilation_outputs.swiftinterface],
                 swift_infos = get_providers(proto_deps + support_deps, SwiftInfo),
             ),
         ]

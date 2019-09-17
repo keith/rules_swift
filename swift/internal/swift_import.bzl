@@ -26,6 +26,7 @@ def _swift_import_impl(ctx):
     deps = ctx.attr.deps
     swiftdocs = ctx.files.swiftdocs
     swiftmodules = ctx.files.swiftmodules
+    swiftmodules = ctx.files.swiftinterfaces
 
     # We have to depend on the C++ toolchain directly here to create the libraries to link.
     # Depending on the Swift toolchain causes a problematic cyclic dependency for built-from-source
@@ -48,9 +49,11 @@ def _swift_import_impl(ctx):
         for archive in archives
     ]
 
+    # TODO
+    swiftinterfaces = []
     providers = [
         DefaultInfo(
-            files = depset(direct = archives + swiftdocs + swiftmodules),
+            files = depset(direct = archives + swiftdocs + swiftmodules + swiftinterfaces),
             runfiles = ctx.runfiles(
                 collect_data = True,
                 collect_default = True,
@@ -75,10 +78,12 @@ def _swift_import_impl(ctx):
             objc_header = None,
             static_archives = archives,
             swiftmodules = swiftmodules,
+            swiftinterfaces = swiftinterfaces,
         ),
         swift_common.create_swift_info(
             swiftdocs = swiftdocs,
             swiftmodules = swiftmodules,
+            swiftinterfaces = swiftinterfaces,
             swift_infos = get_providers(deps, SwiftInfo),
         ),
     ]
@@ -111,6 +116,14 @@ The list of `.swiftdoc` files provided to Swift targets that depend on this targ
                 allow_files = ["swiftmodule"],
                 doc = """
 The list of `.swiftmodule` files provided to Swift targets that depend on this target.
+""",
+                mandatory = True,
+            ),
+            "swiftinterfaces": attr.label_list(
+                allow_empty = False,
+                allow_files = ["swiftmodule"],
+                doc = """
+The list of `.swiftinterface` files provided to Swift targets that depend on this target.
 """,
                 mandatory = True,
             ),

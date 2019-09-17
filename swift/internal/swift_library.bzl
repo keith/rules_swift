@@ -144,6 +144,7 @@ def _swift_library_impl(ctx):
             module_name = module_name,
             swiftdocs = [compilation_outputs.swiftdoc],
             swiftmodules = [compilation_outputs.swiftmodule],
+            swiftinterfaces = [compilation_outputs.swiftinterface],
             swift_infos = get_providers(deps, SwiftInfo),
             swift_version = find_swift_version_copt_value(copts),
         ),
@@ -161,6 +162,7 @@ def _swift_library_impl(ctx):
             module_map = compilation_outputs.generated_module_map,
             static_archives = compact([library_to_link.pic_static_library]),
             swiftmodules = [compilation_outputs.swiftmodule],
+            swiftinterfaces = [compilation_outputs.swiftinterface],
             objc_header = compilation_outputs.generated_header,
         ))
 

@@ -236,6 +236,18 @@ def _swiftmodule(actions, module_name):
     """
     return actions.declare_file("{}.swiftmodule".format(module_name))
 
+def _swiftinterface(actions, module_name):
+    """Declares a file for the Swift interface created by a compilation rule.
+
+    Args:
+      actions: The context's actions object.
+      module_name: The name of the module being built.
+
+    Returns:
+      The declared `File`.
+    """
+    return actions.declare_file("{}.swiftinterface".format(module_name))
+
 def _swift_dependencies_file(actions, target_name, src = None):
     """Declares a file containing the compiler-generated Swift dependencies for a target.
 
@@ -313,6 +325,7 @@ derived_files = struct(
     swiftc_output_file_map = _swiftc_output_file_map,
     swiftdoc = _swiftdoc,
     swiftmodule = _swiftmodule,
+    swiftinterface = _swiftinterface,
     swift_dependencies_file = _swift_dependencies_file,
     whole_module_object_file = _whole_module_object_file,
     xctest_bundle = _xctest_bundle,

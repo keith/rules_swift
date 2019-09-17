@@ -36,6 +36,10 @@ propagated this provider.
 `List` of `File`s. The Swift modules (`.swiftmodule`) for the library that directly propagated this
 provider.
 """,
+        "direct_swiftinterfaces": """
+`List` of `File`s. The Swift interfaces (`.swiftinterface`) for the library that directly propagated this
+provider.
+""",
         "module_name": """
 `String`. The name of the Swift module represented by the target that directly propagated this
 provider.
@@ -62,6 +66,10 @@ that propagated this provider and all of its dependencies.
 """,
         "transitive_swiftmodules": """
 `Depset` of `File`s. The transitive Swift modules (`.swiftmodule`) emitted by the library that
+propagated this provider and all of its dependencies.
+""",
+        "transitive_swiftinterfaces": """
+`Depset` of `File`s. The transitive Swift interfaces (`.swiftinterfaces`) emitted by the library that
 propagated this provider and all of its dependencies.
 """,
     },

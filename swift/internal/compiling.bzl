@@ -54,12 +54,14 @@ def collect_transitive_compile_inputs(args, deps, direct_defines = []):
     transitive_defines = []
     transitive_modulemaps = []
     transitive_swiftmodules = []
+    transitive_swiftinterfaces = []
     for dep in deps:
         if SwiftInfo in dep:
             swift_info = dep[SwiftInfo]
             transitive_defines.append(swift_info.transitive_defines)
             transitive_modulemaps.append(swift_info.transitive_modulemaps)
             transitive_swiftmodules.append(swift_info.transitive_swiftmodules)
+            transitive_swiftinterfaces.append(swift_info.transitive_swiftinterfaces)
         if CcInfo in dep:
             compilation_context = dep[CcInfo].compilation_context
             transitive_cc_defines.append(compilation_context.defines)
@@ -68,10 +70,10 @@ def collect_transitive_compile_inputs(args, deps, direct_defines = []):
             transitive_cc_quote_includes.append(compilation_context.quote_includes)
             transitive_cc_system_includes.append(compilation_context.system_includes)
 
-    # Add import paths for the directories containing dependencies' swiftmodules.
-    all_swiftmodules = depset(transitive = transitive_swiftmodules)
-    args.add_all(all_swiftmodules, format_each = "-I%s", map_each = _dirname_map_fn)
-    input_depsets.append(all_swiftmodules)
+    # Add import paths for the directories containing dependencies' swiftinterfaces.
+    all_swiftinterfaces = depset(transitive = transitive_swiftinterfaces)
+    args.add_all(all_swiftinterfaces, format_each = "-I%s", map_each = _dirname_map_fn)
+    input_depsets.append(all_swiftinterfaces)
 
     # Pass Swift defines propagated by dependencies.
     all_defines = depset(direct_defines, transitive = transitive_defines)
@@ -260,6 +262,7 @@ def new_objc_provider(
         module_map,
         static_archives,
         swiftmodules,
+        swiftinterfaces,
         defines = [],
         objc_header = None):
     """Creates an `apple_common.Objc` provider for a Swift target.
@@ -286,7 +289,7 @@ def new_objc_provider(
     """
     objc_providers = get_providers(deps, apple_common.Objc)
     objc_provider_args = {
-        "link_inputs": depset(direct = swiftmodules + link_inputs),
+        # "link_inputs": depset(direct = swiftmodules + link_inputs),
         "providers": objc_providers,
         "uses_swift": True,
     }
